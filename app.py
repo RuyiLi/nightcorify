@@ -2,18 +2,18 @@ from flask import Flask, render_template, request, make_response, flash, redirec
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 from nightcorify import nightcorify
+from threading import Thread
 import os, sys, time, re
-from multiprocessing import Process
 
 # Create the flask app
 app = Flask(__name__)
 
 # Folder in which the temp files are stored and processed
-app.config['UPLOAD_FOLDER'] = r'C:\Users\ruyil\OneDrive\Desktop\Python\nightcorify\temp'
+app.config['UPLOAD_FOLDER'] = f'{os.getcwd()}\\temp'
 
 # 64 MB max size
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
-app.secret_key = 'assassinationclassroomisthebestanime'
+app.secret_key = 'ayanokoujikiyotaka'
 
 """
 TODO test all formats
@@ -34,17 +34,7 @@ def valid_file(f):
     2. File has an extension
     3. File extension is accepted
     """
-    return (not f == '') and ('.' in f) and (f.split('.')[-1].lower() in accepted_formats)
-
-def remove_temp():
-    while True:
-        # Remove all temporary audio files
-        try:
-            for file in os.listdir("./temp"):
-                os.remove(os.path.join("./temp", file))
-            time.sleep(60)
-        except:
-            pass
+    return (f) and ('.' in f) and (f.split('.')[-1].lower() in accepted_formats)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -76,24 +66,40 @@ def index():
         # Save audio file to specified secure path
         audio.save(fpath)
 
+        if os.stat(fpath).st_size/1e6 > 50:
+            flash("Unexpected error:", sys.exc_info()[0])
+            return redirect(request.url)
+
         # Nightcorify
         nightcorify(fpath, temppath)
 
         # Remove original
         os.remove(fpath)
 
-        # Function to return a generator containing audio data of the nightcorified file
+        # Generator functions that reads bytes of the resulting audio file
         def generate():
             with open(temppath, 'rb') as sound:
+                # 1024 max bytes
                 data = sound.read(1024)
                 while data:
                     yield data
                     data = sound.read(1024)
+
         try:
             response = Response(generate(), mimetype=mimetypes[name.split('.')[-1]], headers={ 'Content-Disposition': ('attachment;filename=nightcore-' + name) })
         except:
             flash("Unexpected error:", sys.exc_info()[0])
             return redirect(request.url)
+
+        def rm_temp():
+            time.sleep(60)
+            print('deleted', temppath)
+            try:
+                os.remove(os.path.join("./temp", temppath))
+            except:
+                pass
+        Thread(target=rm_temp).start()
+
         return response
 
     elif request.method == 'GET':
@@ -107,6 +113,4 @@ def index():
 
 # Run the app.
 if __name__ == '__main__':
-    p = Process(target=remove_temp)
-    p.start()
     app.run(debug=True)

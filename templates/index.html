@@ -2,14 +2,15 @@
 {% block container %}
 <h1>nightcorify</h1>
 <form method="post" action="/" enctype="multipart/form-data">
-    <input type="file" name="file" id="file">
+    <input type="file" name="file" id="file" accept=".mp3,.wav,.ogg" onchange="handle(this)">
     <label for="file">Choose file...</label>
     <label for="file" id="fname">...</label>
     <input type="submit" value="Upload">
 </form>
+<p>Please wait, your files will need to take some time to process.</p>
 {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <ul class=flashes>
+        <ul class="flashes">
         {% for message in messages %}
             <li>{{ message }}</li>
         {% endfor %}
@@ -17,3 +18,4 @@
     {% endif %}
 {% endwith %}
 {% endblock %}
+<!---->

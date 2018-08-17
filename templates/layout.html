@@ -8,7 +8,8 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script>
-    $('input[type="file"]').on('change', function(){
-        $('#fname').text($('input[type="file"]').val().split('\\').pop());
-    })
+    var $$ = document.querySelector.bind(document);
+    var handle = function(el){
+        $$('#fname').innerHTML = el.value.split('\\').pop();
+    }
 </script>
