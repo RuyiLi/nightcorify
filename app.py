@@ -66,10 +66,6 @@ def index():
         # Save audio file to specified secure path
         audio.save(fpath)
 
-        if os.stat(fpath).st_size/1e6 > 50:
-            flash("Unexpected error:", sys.exc_info()[0])
-            return redirect(request.url)
-
         # Nightcorify
         nightcorify(fpath, temppath)
 
